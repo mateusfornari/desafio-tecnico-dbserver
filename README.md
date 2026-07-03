@@ -155,3 +155,14 @@ Modelei as principais classes de domínio conforme diagrama abaixo:
 
 ![Diagrama de Classes](./docs/diagrama-de-classes.drawio.png)
 
+### Instruções
+Para executar a aplicação crie um arquivo **.env**, conforme exemplo **.env.example**, na raiz do projeto. Use os valores que desejar para o nome do banco de dados, usuário e senha.
+
+Execute o seguinte comando:
+```
+docker compose up --build
+```
+
+Ao executar o comando acima, uma instância do PostgreSQL e uma com a aplicação vão subir.
+
+As tabelas serão criadas automaticamente pelo **flyway**, conforme arquivos de migrations.
