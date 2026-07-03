@@ -115,3 +115,43 @@ A tela do tipo SELECAO exibe uma lista de opções para que o usuário.
 O aplicativo envia uma requisição POST para a url informada e com o body definido pelo objeto dentro de cada item da lista de seleção, quando o mesmo é acionado, semelhando ao funcionamento dos botões da tela FORMULARIO.
 
 # desafio-votacao
+
+## Solução do Desafio
+
+Nesta sessão estará descrito o meu entendimento do problema, a forma como implementei e como executar a aplicação.
+
+### Observações
+- Não será implementada autenticação de acesso propositalmente, conforme solicitado no enunciado.
+- A consulta de CPF será implementada na mesma aplicação, mas, em um cenário de produção, poderia ser um microsserviço separado.
+- O formato esperado pela aplicação cliente não está muito claro no **Anexo 1**.
+- Tanto o código quanto as rotas de API e payloads foram escritos em inglês.
+
+### Requisitos Funcionais
+- **RF-01**: Permitir o cadastro de associado. Como cada associado deve ser identificado por um ID único, o mesmo devará ser cadastrado previamente no sistema.
+- **RF-02**: Permitir o cadastro de pautas. As pautas poderão receber votos SIM ou NÃO e contabilizar o total, permitindo consultar o resultado final.
+- **RF-03**: Permitir a abertura de sessões. A votação somente pode acontecer se uma sessão estiver aberta, ou seja, entre a data/hora inicial e a data/hora final. Uma pauta poderá ter mais de uma sessão, mas apenas uma em aberto.
+- **RF-04**: Permitir o voto do associado. Cada associado poderá votar apenas uma vez em cada pauta e apenas se um sessão estiver aberta.
+
+### Requisitos Não Funcionais
+- **RNF-01**: API REST em Spring Boot.
+- **RNF-02**: Persistência dos dados em PostgreSQL.
+- **RNF-03**: Utilizar migrations para criação e alteração do banco de dados.
+- **RNF-04**: Retornar dados estruturados para a geração das telas do aplicativo cliente.
+- **RNF-05**: Validar o CPF em um serviço apartado.
+- **RNF-06**: Não será utilizado credencias para autenticação. As chamadas da API deverão conter o ID do associado que está efetuando o voto.
+
+### Versionamento
+Atendendo ao requisito da **Tarefa Bônus 3**, o versionamento será feito no _path_ da URL, conforme exemplos abaixo:
+```
+/api/v1/agendas
+/api/v1/associates
+```
+Esta abordagem me permite alterar versões em escopos específicos. Por exemplo: se eu precisar receber um payload de formato diferente para cadastrar uma pauta, poderia criar /api/v2/agendas.
+
+O versionamento da rota também evita a quebra de integrações dos clientes. Quem chamar /api/v1/agendas vai continuar funcionando.
+
+### Modelagem
+Modelei as principais classes de domínio conforme diagrama abaixo:
+
+![Diagrama de Classes](./docs/diagrama-de-classes.drawio.png)
+
