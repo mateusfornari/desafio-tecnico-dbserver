@@ -133,7 +133,7 @@ Nesta sessão estará descrito o meu entendimento do problema, a forma como impl
 - **RF-04**: Permitir o voto do associado. Cada associado poderá votar apenas uma vez em cada pauta e apenas se um sessão estiver aberta.
 
 ### Requisitos Não Funcionais
-- **RNF-01**: API REST em Spring Boot.
+- **RNF-01**: API REST em Spring Boot 4.1.0 e Java 25.
 - **RNF-02**: Persistência dos dados em PostgreSQL.
 - **RNF-03**: Utilizar migrations para criação e alteração do banco de dados.
 - **RNF-04**: Retornar dados estruturados para a geração das telas do aplicativo cliente.

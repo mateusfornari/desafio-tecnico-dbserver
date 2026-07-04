@@ -2,12 +2,10 @@ package br.dev.fornarilabs.voting_system.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Objects;
 
-@RequiredArgsConstructor
 @Embeddable
 public class VoteId implements Serializable {
     @Column(name = "agenda_id")
@@ -15,6 +13,13 @@ public class VoteId implements Serializable {
 
     @Column(name = "associate_id")
     private Long associateId;
+
+    public VoteId(){}
+
+    public VoteId(Long agendaId, Long associateId){
+        this.agendaId = agendaId;
+        this.associateId = associateId;
+    }
 
     @Override
     public boolean equals(Object obj) {

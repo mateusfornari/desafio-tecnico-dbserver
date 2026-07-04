@@ -19,10 +19,10 @@ public class Agenda {
     private String description;
 
     @Column(name = "votes_count_yes")
-    private Long votesCountYes;
+    private Long votesCountYes = 0L;
 
     @Column(name = "votes_count_no")
-    private Long votesCountNo;
+    private Long votesCountNo = 0L;
 
     @CreatedDate
     @Column(name = "creation_time", updatable = false)
