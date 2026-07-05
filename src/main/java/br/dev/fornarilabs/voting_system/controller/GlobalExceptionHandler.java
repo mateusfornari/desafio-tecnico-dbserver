@@ -5,6 +5,7 @@ import br.dev.fornarilabs.voting_system.dto.ErrorResponseDTO;
 import br.dev.fornarilabs.voting_system.dto.FieldErrorDTO;
 import br.dev.fornarilabs.voting_system.service.exceptions.AgendaNotFound;
 import br.dev.fornarilabs.voting_system.service.exceptions.AssociateAlreadyExists;
+import br.dev.fornarilabs.voting_system.service.exceptions.VotingSessionAlreadyOpen;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -77,6 +78,17 @@ public class GlobalExceptionHandler {
         ErrorResponseDTO error = new ErrorResponseDTO(
                 HttpStatus.UNPROCESSABLE_CONTENT.value(),
                 "Associate already exists with this CPF.",
+                System.currentTimeMillis()
+        );
+        return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_CONTENT);
+    }
+
+    @ExceptionHandler(VotingSessionAlreadyOpen.class)
+    public ResponseEntity<ErrorResponseDTO> handleException(VotingSessionAlreadyOpen e){
+        log.error(e.getMessage());
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                HttpStatus.UNPROCESSABLE_CONTENT.value(),
+                "There is another session open.",
                 System.currentTimeMillis()
         );
         return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_CONTENT);

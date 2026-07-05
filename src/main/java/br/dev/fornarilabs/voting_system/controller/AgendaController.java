@@ -2,9 +2,13 @@ package br.dev.fornarilabs.voting_system.controller;
 
 
 import br.dev.fornarilabs.voting_system.domain.Agenda;
+import br.dev.fornarilabs.voting_system.domain.VotingSession;
 import br.dev.fornarilabs.voting_system.dto.AgendaDTO;
 import br.dev.fornarilabs.voting_system.dto.CreateAgendaDTO;
+import br.dev.fornarilabs.voting_system.dto.OpenVotingSessionDTO;
+import br.dev.fornarilabs.voting_system.dto.VotingSessionDTO;
 import br.dev.fornarilabs.voting_system.service.AgendaService;
+import br.dev.fornarilabs.voting_system.service.VotingSessionService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +26,9 @@ public class AgendaController {
 
     @Autowired
     private AgendaService agendaService;
+
+    @Autowired
+    private VotingSessionService votingSessionService;
 
     @PostMapping
     public ResponseEntity<?> createAgenda(@Valid @RequestBody CreateAgendaDTO body){
@@ -48,5 +55,12 @@ public class AgendaController {
         Agenda agenda = agendaService.findById(id);
         AgendaDTO responseBody = new AgendaDTO(agenda);
         return ResponseEntity.ok(responseBody);
+    }
+
+    @PostMapping("/{agendaId}/open-session")
+    public ResponseEntity<?> openSession(@PathVariable Long agendaId, @Valid @RequestBody OpenVotingSessionDTO body){
+        VotingSession votingSession = votingSessionService.openVotingSession(agendaId, body.durationMinutes());
+        VotingSessionDTO responseBody = new VotingSessionDTO(votingSession);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
     }
 }

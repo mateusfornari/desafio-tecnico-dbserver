@@ -1,9 +1,12 @@
 package br.dev.fornarilabs.voting_system.controller;
 
 import br.dev.fornarilabs.voting_system.domain.Agenda;
+import br.dev.fornarilabs.voting_system.domain.VotingSession;
 import br.dev.fornarilabs.voting_system.mock.EntityMockCreator;
 import br.dev.fornarilabs.voting_system.service.AgendaService;
+import br.dev.fornarilabs.voting_system.service.VotingSessionService;
 import br.dev.fornarilabs.voting_system.service.exceptions.AgendaNotFound;
+import br.dev.fornarilabs.voting_system.service.exceptions.VotingSessionAlreadyOpen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,9 @@ public class AgendaControllerTest {
 
     @MockitoBean
     private AgendaService agendaService;
+
+    @MockitoBean
+    private VotingSessionService votingSessionService;
 
     private static final String BASE_PATH = "/api/v1/agendas";
 
@@ -176,10 +182,50 @@ public class AgendaControllerTest {
         ;
     }
 
+    @Test
+    @DisplayName("Must create a voting session and return 200 with data body.")
+    void mustCreateAVotingSessionSuccessfully() throws Exception {
+        String request = "{\"durationMinutes\":1}";
+        VotingSession votingSession = EntityMockCreator.createVotingSessionMock();
+        Agenda agenda = votingSession.getAgenda();
+
+        when(agendaService.save(any(Agenda.class))).thenReturn(agenda);
+        when(votingSessionService.openVotingSession(any(Long.class), any(Long.class))).thenReturn(votingSession);
+
+        mockMvc.perform(post(BASE_PATH + "/1/open-session")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(request))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(votingSession.getId()))
+                .andExpect(jsonPath("$.agenda.id").value(agenda.getId()))
+                .andExpect(jsonPath("$.agenda.title").value(agenda.getTitle()))
+                .andExpect(jsonPath("$.agenda.description").value(agenda.getDescription()))
+                .andExpect(jsonPath("$.agenda.votesCountYes").value(agenda.getVotesCountYes()))
+                .andExpect(jsonPath("$.agenda.votesCountNo").value(agenda.getVotesCountNo()))
+                .andExpect(jsonPath("$.agenda.totalVotes").value(agenda.getVotesCountYes() + agenda.getVotesCountNo()))
+        ;
+
+    }
+
+    @Test
+    @DisplayName("Must return 422 if an open voting session exists.")
+    void mustReturn422IfAnOpenSessionExists() throws Exception {
+        String request = "{\"durationMinutes\":1}";
+        when(votingSessionService.openVotingSession(any(Long.class), any(Long.class))).thenThrow(VotingSessionAlreadyOpen.class);
+
+        mockMvc.perform(post(BASE_PATH + "/1/open-session")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isUnprocessableContent())
+        ;
+
+    }
+
     private String createRequest(Agenda agenda) {
         Map<String, String> request = new HashMap<>();
         request.put("title", agenda.getTitle());
         request.put("description", agenda.getDescription());
         return objectMapper.writeValueAsString(request);
     }
+
 }
