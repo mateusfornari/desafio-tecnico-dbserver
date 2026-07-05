@@ -46,7 +46,7 @@ public class VoteServiceTest {
         when(agendaService.findById(1L)).thenReturn(agenda);
         when(votingSessionService.getOpenSession(any(Agenda.class))).thenReturn(votingSession);
         when(voteRepository.existsById(any(VoteId.class))).thenReturn(false);
-        when(voteRepository.save(any(Vote.class))).thenReturn(vote);
+        when(voteRepository.saveAndFlush(any(Vote.class))).thenReturn(vote);
         Vote createdVote = voteService.registerVote(1L, 1L, VoteChoice.YES);
         assertNotNull(createdVote);
     }

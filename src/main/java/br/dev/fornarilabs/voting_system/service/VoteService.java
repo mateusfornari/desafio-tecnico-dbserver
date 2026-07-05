@@ -40,7 +40,7 @@ public class VoteService {
             log.warn("Associate {} already voted in agenda {}.", associate.getId(), agenda.getId());
             throw new VoteAlreadyDone("Associate already voted.");
         }
-        Vote createdVote = voteRepository.save(vote);
+        Vote createdVote = voteRepository.saveAndFlush(vote);
         agendaService.incrementVotesCount(agenda, choice);
         log.info("Associate {} voted in agenda {} successfully.", associate.getId(), agenda.getId());
         return createdVote;
