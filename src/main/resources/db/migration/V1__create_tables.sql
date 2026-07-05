@@ -14,6 +14,7 @@ CREATE TABLE tb_agenda (
     votes_count_yes BIGINT NOT NULL DEFAULT 0,
     votes_count_no BIGINT NOT NULL DEFAULT 0
 );
+CREATE INDEX idx_agenda_creation_time ON tb_agenda(creation_time);
 
 CREATE TABLE tb_voting_session (
     id BIGSERIAL PRIMARY KEY,

@@ -8,18 +8,22 @@ import java.time.ZoneOffset;
 public class EntityMockCreator {
 
     public static Agenda createAgendaMock(){
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         Agenda agenda = new Agenda();
         agenda.setId(1L);
         agenda.setTitle("Unit Test Agenda");
         agenda.setDescription("Unit Test Agenda description.");
+        agenda.setCreationTime(now);
         return agenda;
     }
 
     public static Associate createAssociateMock(){
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         Associate associate = new Associate();
         associate.setId(1L);
         associate.setName("Unit Test Associate");
         associate.setCpf("12345678901");
+        associate.setCreationTime(now);
         return associate;
     }
 
