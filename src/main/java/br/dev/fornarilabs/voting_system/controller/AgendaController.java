@@ -25,6 +25,7 @@ public class AgendaController {
 
     @PostMapping
     public ResponseEntity<?> createAgenda(@Valid @RequestBody CreateAgendaDTO body){
+        log.info("Agenda creation request received.");
         Agenda agenda = new Agenda();
         agenda.setTitle(body.title());
         agenda.setDescription(body.description());
@@ -35,6 +36,7 @@ public class AgendaController {
 
     @GetMapping
     public ResponseEntity<?> listAllAgendas(@PageableDefault(page = 0, size = 20) Pageable pageable){
+        log.info("List agendas request received.");
         Page<Agenda> agendaPage = agendaService.listAll(pageable.getPageNumber(), pageable.getPageSize());
         Page<AgendaDTO> responseBody = agendaPage.map(AgendaDTO::new);
         return ResponseEntity.ok(responseBody);
@@ -42,6 +44,7 @@ public class AgendaController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getAgenda(@PathVariable Long id){
+        log.info("Get agenda request received.");
         Agenda agenda = agendaService.findById(id);
         AgendaDTO responseBody = new AgendaDTO(agenda);
         return ResponseEntity.ok(responseBody);

@@ -4,6 +4,7 @@ import br.dev.fornarilabs.voting_system.dto.BadRequestDTO;
 import br.dev.fornarilabs.voting_system.dto.ErrorResponseDTO;
 import br.dev.fornarilabs.voting_system.dto.FieldErrorDTO;
 import br.dev.fornarilabs.voting_system.service.exceptions.AgendaNotFound;
+import br.dev.fornarilabs.voting_system.service.exceptions.AssociateAlreadyExists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -68,6 +69,17 @@ public class GlobalExceptionHandler {
                 System.currentTimeMillis()
         );
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AssociateAlreadyExists.class)
+    public ResponseEntity<ErrorResponseDTO> handleException(AssociateAlreadyExists e){
+        log.error(e.getMessage());
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                HttpStatus.UNPROCESSABLE_CONTENT.value(),
+                "Associate already exists with this CPF.",
+                System.currentTimeMillis()
+        );
+        return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
