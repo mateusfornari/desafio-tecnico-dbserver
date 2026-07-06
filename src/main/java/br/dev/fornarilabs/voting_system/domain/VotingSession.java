@@ -12,7 +12,6 @@ import java.time.OffsetDateTime;
 @Setter
 @Entity
 @Table(name = "tb_voting_session")
-@EntityListeners(AuditingEntityListener.class)
 public class VotingSession {
 
     @Id
@@ -23,8 +22,7 @@ public class VotingSession {
     @JoinColumn(name = "agenda_id")
     private Agenda agenda;
 
-    @CreatedDate
-    @Column(name = "start_time", updatable = false)
+    @Column(name = "start_time")
     private OffsetDateTime startTime;
 
     @Column(name = "end_time")

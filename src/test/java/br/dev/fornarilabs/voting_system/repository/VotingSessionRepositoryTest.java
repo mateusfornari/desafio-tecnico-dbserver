@@ -48,6 +48,7 @@ public class VotingSessionRepositoryTest extends BaseRepositoryTest {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         VotingSession votingSession = new VotingSession();
         votingSession.setAgenda(agenda);
+        votingSession.setStartTime(now);
         votingSession.setEndTime(now.plusMinutes(1L));
         return votingSessionRepository.save(votingSession);
     }

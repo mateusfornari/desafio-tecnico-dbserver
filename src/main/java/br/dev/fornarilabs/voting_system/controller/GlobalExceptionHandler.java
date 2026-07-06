@@ -3,9 +3,7 @@ package br.dev.fornarilabs.voting_system.controller;
 import br.dev.fornarilabs.voting_system.dto.BadRequestDTO;
 import br.dev.fornarilabs.voting_system.dto.ErrorResponseDTO;
 import br.dev.fornarilabs.voting_system.dto.FieldErrorDTO;
-import br.dev.fornarilabs.voting_system.service.exceptions.AgendaNotFound;
-import br.dev.fornarilabs.voting_system.service.exceptions.AssociateAlreadyExists;
-import br.dev.fornarilabs.voting_system.service.exceptions.VotingSessionAlreadyOpen;
+import br.dev.fornarilabs.voting_system.service.exceptions.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,78 +40,82 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponseDTO> handleException(HttpMessageNotReadableException e){
         log.error(e.getMessage());
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.BAD_REQUEST.value(),
-                "Invalid request body.",
-                System.currentTimeMillis()
-        );
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        return generateBadRequestResponse("Invalid request body.");
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponseDTO> handleException(NoResourceFoundException e){
         log.error(e.getMessage());
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.NOT_FOUND.value(),
-                "Resource not found.",
-                System.currentTimeMillis()
-        );
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        return generateNotFoundResponse("Resource not found.");
     }
 
     @ExceptionHandler(AgendaNotFound.class)
     public ResponseEntity<ErrorResponseDTO> handleException(AgendaNotFound e){
-        log.error(e.getMessage());
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.NOT_FOUND.value(),
-                "The agenda was not found.",
-                System.currentTimeMillis()
-        );
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        log.warn(e.getMessage());
+        return generateNotFoundResponse("The agenda was not found.");
+    }
+
+    @ExceptionHandler(AssociateNotFound.class)
+    public ResponseEntity<ErrorResponseDTO> handleException(AssociateNotFound e){
+        log.warn(e.getMessage());
+        return generateNotFoundResponse("The associate was not found.");
     }
 
     @ExceptionHandler(AssociateAlreadyExists.class)
     public ResponseEntity<ErrorResponseDTO> handleException(AssociateAlreadyExists e){
-        log.error(e.getMessage());
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.UNPROCESSABLE_CONTENT.value(),
-                "Associate already exists with this CPF.",
-                System.currentTimeMillis()
-        );
-        return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_CONTENT);
+        log.warn(e.getMessage());
+        return generateUnprocessableResponse("Associate already exists with this CPF.");
     }
 
     @ExceptionHandler(VotingSessionAlreadyOpen.class)
     public ResponseEntity<ErrorResponseDTO> handleException(VotingSessionAlreadyOpen e){
-        log.error(e.getMessage());
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.UNPROCESSABLE_CONTENT.value(),
-                "There is another session open.",
-                System.currentTimeMillis()
-        );
-        return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_CONTENT);
+        log.warn(e.getMessage());
+        return generateUnprocessableResponse("There is another session open.");
+    }
+
+    @ExceptionHandler(VotingSessionNotOpen.class)
+    public ResponseEntity<ErrorResponseDTO> handleException(VotingSessionNotOpen e){
+        log.warn(e.getMessage());
+        return generateUnprocessableResponse("The voting session is closed.");
+    }
+
+    @ExceptionHandler(VoteAlreadyDone.class)
+    public ResponseEntity<ErrorResponseDTO> handleException(VoteAlreadyDone e){
+        log.warn(e.getMessage());
+        return generateUnprocessableResponse("The associate already voted in this agenda.");
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponseDTO> handleException(MethodArgumentTypeMismatchException e){
         log.error(e.getMessage());
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.BAD_REQUEST.value(),
-                "The '%s' param is malformed.".formatted(e.getName()),
-                System.currentTimeMillis()
-        );
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        return generateBadRequestResponse("The '%s' param is malformed.".formatted(e.getName()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleException(Exception e){
         log.error(e.getMessage());
         e.printStackTrace();
+        return generateResponse("Unexpected error.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private ResponseEntity<ErrorResponseDTO> generateUnprocessableResponse(String message){
+        return generateResponse(message, HttpStatus.UNPROCESSABLE_CONTENT);
+    }
+
+    private ResponseEntity<ErrorResponseDTO> generateNotFoundResponse(String message){
+        return generateResponse(message, HttpStatus.NOT_FOUND);
+    }
+
+    private ResponseEntity<ErrorResponseDTO> generateBadRequestResponse(String message){
+        return generateResponse(message, HttpStatus.BAD_REQUEST);
+    }
+
+    private ResponseEntity<ErrorResponseDTO> generateResponse(String message, HttpStatus status){
         ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Unexpected error.",
+                status.value(),
+                message,
                 System.currentTimeMillis()
         );
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(error, status);
     }
 }

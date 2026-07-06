@@ -1,12 +1,13 @@
 package br.dev.fornarilabs.voting_system.controller;
 
-import br.dev.fornarilabs.voting_system.domain.Agenda;
-import br.dev.fornarilabs.voting_system.domain.VotingSession;
+import br.dev.fornarilabs.voting_system.domain.*;
+import br.dev.fornarilabs.voting_system.dto.CreateAgendaDTO;
+import br.dev.fornarilabs.voting_system.dto.RegisterVoteDTO;
 import br.dev.fornarilabs.voting_system.mock.EntityMockCreator;
 import br.dev.fornarilabs.voting_system.service.AgendaService;
+import br.dev.fornarilabs.voting_system.service.VoteService;
 import br.dev.fornarilabs.voting_system.service.VotingSessionService;
-import br.dev.fornarilabs.voting_system.service.exceptions.AgendaNotFound;
-import br.dev.fornarilabs.voting_system.service.exceptions.VotingSessionAlreadyOpen;
+import br.dev.fornarilabs.voting_system.service.exceptions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -44,6 +43,9 @@ public class AgendaControllerTest {
 
     @MockitoBean
     private VotingSessionService votingSessionService;
+
+    @MockitoBean
+    private VoteService voteService;
 
     private static final String BASE_PATH = "/api/v1/agendas";
 
@@ -183,7 +185,7 @@ public class AgendaControllerTest {
     }
 
     @Test
-    @DisplayName("Must create a voting session and return 200 with data body.")
+    @DisplayName("Must create a voting session and return 201 with data body.")
     void mustCreateAVotingSessionSuccessfully() throws Exception {
         String request = "{\"durationMinutes\":1}";
         VotingSession votingSession = EntityMockCreator.createVotingSessionMock();
@@ -204,7 +206,6 @@ public class AgendaControllerTest {
                 .andExpect(jsonPath("$.agenda.votesCountNo").value(agenda.getVotesCountNo()))
                 .andExpect(jsonPath("$.agenda.totalVotes").value(agenda.getVotesCountYes() + agenda.getVotesCountNo()))
         ;
-
     }
 
     @Test
@@ -218,13 +219,97 @@ public class AgendaControllerTest {
                         .content(request))
                 .andExpect(status().isUnprocessableContent())
         ;
+    }
 
+    @Test
+    @DisplayName("Must register vote and return 201 with vote data.")
+    void mustRegisterVoteSuccessfully() throws Exception {
+        Vote vote = EntityMockCreator.createVoteMock();
+        String request = createVoteRequest(vote);
+        VotingSession votingSession = vote.getSession();
+        Agenda agenda = votingSession.getAgenda();
+        Associate associate = vote.getAssociate();
+
+        when(voteService.registerVote(any(Long.class), any(Long.class), any(VoteChoice.class))).thenReturn(vote);
+
+        mockMvc.perform(post(BASE_PATH + "/1/vote")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.session.id").value(votingSession.getId()))
+                .andExpect(jsonPath("$.session.agenda.id").value(agenda.getId()))
+                .andExpect(jsonPath("$.associate.id").value(associate.getId()))
+                .andExpect(jsonPath("$.choice").value(vote.getChoice().name()))
+        ;
+    }
+
+    @Test
+    @DisplayName("Must return 422 if there is no open session.")
+    void mustReturn422IfThereIsNoOpenSession() throws Exception {
+        Vote vote = EntityMockCreator.createVoteMock();
+        String request = createVoteRequest(vote);
+
+        when(voteService.registerVote(any(Long.class), any(Long.class), any(VoteChoice.class))).thenThrow(VotingSessionNotOpen.class);
+
+        mockMvc.perform(post(BASE_PATH + "/1/vote")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isUnprocessableContent())
+        ;
+    }
+
+    @Test
+    @DisplayName("Must return 422 if associate already voted.")
+    void mustReturn422IfAssociateAlreadyVoted() throws Exception {
+        Vote vote = EntityMockCreator.createVoteMock();
+        String request = createVoteRequest(vote);
+
+        when(voteService.registerVote(any(Long.class), any(Long.class), any(VoteChoice.class))).thenThrow(VoteAlreadyDone.class);
+
+        mockMvc.perform(post(BASE_PATH + "/1/vote")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isUnprocessableContent())
+        ;
+    }
+
+    @Test
+    @DisplayName("Must return 404 if agenda is not found.")
+    void mustReturn404IfAgendaIsNotFound() throws Exception {
+        Vote vote = EntityMockCreator.createVoteMock();
+        String request = createVoteRequest(vote);
+
+        when(voteService.registerVote(any(Long.class), any(Long.class), any(VoteChoice.class))).thenThrow(AgendaNotFound.class);
+
+        mockMvc.perform(post(BASE_PATH + "/1/vote")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isNotFound())
+        ;
+    }
+
+    @Test
+    @DisplayName("Must return 404 if associate is not found.")
+    void mustReturn404IfAssociateIsNotFound() throws Exception {
+        Vote vote = EntityMockCreator.createVoteMock();
+        String request = createVoteRequest(vote);
+
+        when(voteService.registerVote(any(Long.class), any(Long.class), any(VoteChoice.class))).thenThrow(AssociateNotFound.class);
+
+        mockMvc.perform(post(BASE_PATH + "/1/vote")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isNotFound())
+        ;
     }
 
     private String createRequest(Agenda agenda) {
-        Map<String, String> request = new HashMap<>();
-        request.put("title", agenda.getTitle());
-        request.put("description", agenda.getDescription());
+        CreateAgendaDTO request = new CreateAgendaDTO(agenda.getTitle(), agenda.getDescription());
+        return objectMapper.writeValueAsString(request);
+    }
+
+    private String createVoteRequest(Vote vote) {
+        RegisterVoteDTO request = new RegisterVoteDTO(vote.getAssociate().getId(), vote.getChoice());
         return objectMapper.writeValueAsString(request);
     }
 

@@ -21,7 +21,7 @@ public class AgendaRepositoryTest extends BaseRepositoryTest{
         assertNotNull(createdAgenda);
         assertNotNull(createdAgenda.getCreationTime());
 
-        Optional<Agenda> found = agendaRepository.findById(1L);
+        Optional<Agenda> found = agendaRepository.findById(createdAgenda.getId());
         assertTrue(found.isPresent());
         assertEquals(createdAgenda.getTitle(), found.get().getTitle());
         assertEquals(0L, found.get().getVotesCountYes());

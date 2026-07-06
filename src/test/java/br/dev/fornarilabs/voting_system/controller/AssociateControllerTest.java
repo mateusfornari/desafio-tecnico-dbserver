@@ -1,6 +1,7 @@
 package br.dev.fornarilabs.voting_system.controller;
 
 import br.dev.fornarilabs.voting_system.domain.Associate;
+import br.dev.fornarilabs.voting_system.dto.CreateAssociateDTO;
 import br.dev.fornarilabs.voting_system.mock.EntityMockCreator;
 import br.dev.fornarilabs.voting_system.service.AssociateService;
 import br.dev.fornarilabs.voting_system.service.exceptions.AssociateAlreadyExists;
@@ -12,10 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
-
-import java.util.HashMap;
-import java.util.Map;
-
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -144,9 +141,7 @@ public class AssociateControllerTest {
     }
 
     private String createRequest(Associate associate){
-        Map<String, String> request = new HashMap<>();
-        request.put("name", associate.getName());
-        request.put("cpf", associate.getCpf());
+        CreateAssociateDTO request = new CreateAssociateDTO(associate.getName(), associate.getCpf());
         return objectMapper.writeValueAsString(request);
     }
 }
