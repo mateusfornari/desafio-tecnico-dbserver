@@ -61,6 +61,7 @@ public class AgendaController {
 
     @PostMapping("/{agendaId}/open-session")
     public ResponseEntity<?> openSession(@PathVariable Long agendaId, @Valid @RequestBody OpenVotingSessionDTO body){
+        log.info("Open voting session request received.");
         VotingSession votingSession = votingSessionService.openVotingSession(agendaId, body.durationMinutes());
         VotingSessionDTO responseBody = new VotingSessionDTO(votingSession);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
@@ -68,6 +69,7 @@ public class AgendaController {
 
     @PostMapping("/{agendaId}/vote")
     public ResponseEntity<?> registerVote(@PathVariable Long agendaId, @Valid @RequestBody RegisterVoteDTO body){
+        log.info("Register vote request received.");
         Vote vote = voteService.registerVote(body.associateId(), agendaId, body.choice());
         VoteDTO responseBody = new VoteDTO(vote);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);

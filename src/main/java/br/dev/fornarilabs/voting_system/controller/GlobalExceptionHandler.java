@@ -85,6 +85,12 @@ public class GlobalExceptionHandler {
         return generateUnprocessableResponse("The associate already voted in this agenda.");
     }
 
+    @ExceptionHandler(InvalidCpf.class)
+    public ResponseEntity<ErrorResponseDTO> handleException(InvalidCpf e){
+        log.warn(e.getMessage());
+        return generateUnprocessableResponse("The associate is unable to vote.");
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponseDTO> handleException(MethodArgumentTypeMismatchException e){
         log.error(e.getMessage());

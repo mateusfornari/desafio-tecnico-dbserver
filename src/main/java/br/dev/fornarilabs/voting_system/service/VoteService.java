@@ -2,6 +2,7 @@ package br.dev.fornarilabs.voting_system.service;
 
 import br.dev.fornarilabs.voting_system.domain.*;
 import br.dev.fornarilabs.voting_system.repository.VoteRepository;
+import br.dev.fornarilabs.voting_system.service.exceptions.InvalidCpf;
 import br.dev.fornarilabs.voting_system.service.exceptions.VoteAlreadyDone;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -25,9 +26,15 @@ public class VoteService {
     @Autowired
     private VotingSessionService votingSessionService;
 
+    @Autowired
+    private CpfClientService cpfClientService;
+
     @Transactional
     public Vote registerVote(Long associateId, Long agendaId, VoteChoice choice){
         Associate associate = associateService.findById(associateId);
+        if(!cpfClientService.isCpfValid(associate.getCpf())){
+            throw new InvalidCpf("Associate CPF is unable to vote.");
+        }
         Agenda agenda = agendaService.findById(agendaId);
         VotingSession votingSession = votingSessionService.getOpenSession(agenda);
         VoteId voteId = new VoteId(agenda.getId(), associate.getId());

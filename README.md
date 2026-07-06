@@ -157,8 +157,19 @@ Modelei as principais classes de domínio conforme diagrama abaixo:
 ![Diagrama de Classes](./docs/diagrama-de-classes.drawio.png)
 
 ### Tarefa Bônus 1 - Validação do CPF
+Implementei um endpoint /cpf-validator/v1 para receber o CPF e retornar o status (ABLE_TO_VOTE ou UNABLE_TO_VOTE).
+
+A URL base é configurável pela variável de ambiente API_CPF_BASE_URL, no arquivo .env.
+
+Implementei um service CpfClientService para acessar o endpoint utilizando RestClient. 
 
 ### Tarefa Bônus 2 - Performance
+Minha proposta para implementar este sistema para alta performance (milhões de acessos) e alta disponibilidade é a seguinte:
+
+Utilizar os seguintes serviços da AWS:
+- ECS para subir os containers com a aplicação em modo FARGATE.
+- Application Load Balancer para receber as requisições e distribuir entre as instâncias ECS.
+- DynamoDB como banco de dados para garantir a escala horizontal e alta performance.
 
 ### Tarefa Bônus 3 - Versionamento da API
 Atendendo ao requisito da **Tarefa Bônus 3**, o versionamento será feito no _path_ da URL, conforme exemplos abaixo:
