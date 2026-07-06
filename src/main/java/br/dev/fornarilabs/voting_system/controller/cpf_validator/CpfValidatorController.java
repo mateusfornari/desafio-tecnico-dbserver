@@ -23,6 +23,7 @@ public class CpfValidatorController {
 
     @PostMapping
     public ResponseEntity<?> validateCpf(@Valid @RequestBody ValidateCpfDTO body){
+        log.info("CPF validation request received.");
         boolean result = cpfValidatorService.isValid(body.cpf());
         if(result){
             return ResponseEntity.ok(new ValidateCpfResponseDTO("ABLE_TO_VOTE"));
