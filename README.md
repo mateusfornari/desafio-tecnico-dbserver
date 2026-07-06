@@ -126,21 +126,41 @@ Nesta sessão estará descrito o meu entendimento do problema, a forma como impl
 - O formato esperado pela aplicação cliente não está muito claro no **Anexo 1**.
 - Tanto o código quanto as rotas de API e payloads foram escritos em inglês.
 
+### Lógica do Voto
+Implementei a lógica do voto da seguinte forma:
+- Registra o voto no banco de dados referenciando o associado, a pauta, a sessão e a escolha (SIM/NÃO).
+- Incrementa, atomicamente, o total de votos SIM e total de votos NÃO na tabela da pauta.
+
+Pensei nisso com o objetivo de evitar ter que contar todos os votos sempre que consultar a pauta. Assim o total já estará pronto ao consultar a pauta.
+
+Esta abordagem também evita inconsistência nos totalizadores em casos de múltiplas instâncias da aplicação com votos simultâneos.
+
+Claro que isso pode causar um gargalo de desempenho, em casos de muitos votos sendo registrados simultaneamente. Para solucionar isso vou descrever abaixo uma proposta para a **Tarefa Bônus 2 - Performance**.
+
 ### Requisitos Funcionais
 - **RF-01**: Permitir o cadastro de associado. Como cada associado deve ser identificado por um ID único, o mesmo devará ser cadastrado previamente no sistema.
 - **RF-02**: Permitir o cadastro de pautas. As pautas poderão receber votos SIM ou NÃO e contabilizar o total, permitindo consultar o resultado final.
 - **RF-03**: Permitir a abertura de sessões. A votação somente pode acontecer se uma sessão estiver aberta, ou seja, entre a data/hora inicial e a data/hora final. Uma pauta poderá ter mais de uma sessão, mas apenas uma em aberto.
-- **RF-04**: Permitir o voto do associado. Cada associado poderá votar apenas uma vez em cada pauta e apenas se um sessão estiver aberta.
+- **RF-04**: Permitir o voto do associado. Cada associado poderá votar apenas uma vez em cada pauta e apenas se uma sessão estiver aberta.
 
 ### Requisitos Não Funcionais
 - **RNF-01**: API REST em Spring Boot 4.1.0 e Java 25.
 - **RNF-02**: Persistência dos dados em PostgreSQL.
 - **RNF-03**: Utilizar migrations para criação e alteração do banco de dados.
-- **RNF-04**: Retornar dados estruturados para a geração das telas do aplicativo cliente.
+- **RNF-04**: Retornar dados em formato JSON.
 - **RNF-05**: Validar o CPF em um serviço apartado.
 - **RNF-06**: Não será utilizado credencias para autenticação. As chamadas da API deverão conter o ID do associado que está efetuando o voto.
 
-### Versionamento
+### Modelagem
+Modelei as principais classes de domínio conforme diagrama abaixo:
+
+![Diagrama de Classes](./docs/diagrama-de-classes.drawio.png)
+
+### Tarefa Bônus 1 - Validação do CPF
+
+### Tarefa Bônus 2 - Performance
+
+### Tarefa Bônus 3 - Versionamento da API
 Atendendo ao requisito da **Tarefa Bônus 3**, o versionamento será feito no _path_ da URL, conforme exemplos abaixo:
 ```
 /api/v1/agendas
@@ -150,12 +170,10 @@ Esta abordagem me permite alterar versões em escopos específicos. Por exemplo:
 
 O versionamento da rota também evita a quebra de integrações dos clientes. Quem chamar /api/v1/agendas vai continuar funcionando.
 
-### Modelagem
-Modelei as principais classes de domínio conforme diagrama abaixo:
-
-![Diagrama de Classes](./docs/diagrama-de-classes.drawio.png)
 
 ### Instruções
+
+#### Execução
 Para executar a aplicação crie um arquivo **.env**, conforme exemplo **.env.example**, na raiz do projeto. Use os valores que desejar para o nome do banco de dados, usuário e senha.
 
 Execute o seguinte comando:
@@ -166,3 +184,135 @@ docker compose up --build
 Ao executar o comando acima, uma instância do PostgreSQL e uma com a aplicação vão subir.
 
 As tabelas serão criadas automaticamente pelo **flyway**, conforme arquivos de migrations.
+
+#### Testes
+Para executar os testes unitários execute o seguinte comando:
+```
+./gradlew test
+```
+
+#### Uso da API
+Para acessar a documentação Swagger use esta URL: http://localhost:8080/swagger-ui/index.html
+
+**Cadastrar uma Pauta**
+
+```
+POST http://localhost:8080/api/v1/agendas
+
+Requisição:
+{
+  "title": "Teste Pauta",
+  "description": "Teste de descrição de pauta."
+}
+
+Resposta:
+{
+    "id": 4,
+    "title": "Teste Pauta",
+    "description": "Teste de descrição de pauta.",
+    "votesCountYes": 0,
+    "votesCountNo": 0,
+    "totalVotes": 0,
+    "creationTime": "2026-07-05T17:37:05.879Z"
+}
+```
+
+**Cadastrar um Associado**
+
+```
+POST http://localhost:8080/api/v1/associates
+
+Requisição:
+{
+    "cpf": "12345678904",
+    "name": "Teste Associado"
+}
+
+Resposta:
+{
+    "id": 4,
+    "name": "Teste Associado",
+    "cpf": "12345678904",
+    "creationTime": "2026-07-06T16:53:28.097Z"
+}
+```
+
+**Abrir uma Sessão de Votação**
+
+```
+POST http://localhost:8080/api/v1/agendas/{idPauta}/open-session
+
+Requisição:
+{
+    "durationMinutes": 5
+}
+
+Resposta:
+{
+    "id": 11,
+    "agenda": {
+        "id": 2,
+        "title": "Teste Pauta",
+        "description": "Teste de descrição de pauta.",
+        "votesCountYes": 0,
+        "votesCountNo": 0,
+        "totalVotes": 0,
+        "creationTime": "2026-07-05T17:16:00.344Z"
+    },
+    "startTime": "2026-07-06T16:51:13.803Z",
+    "endTime": "2026-07-06T16:56:13.803Z"
+}
+```
+
+**Efetuar Voto**
+```
+POST http://localhost:8080/api/v1/agendas/{idPauta}/vote
+
+Requisição:
+{
+    "associateId": 1,
+    "choice": "YES"
+}
+
+Resposta:
+{
+    "session": {
+        "id": 11,
+        "agenda": {
+            "id": 2,
+            "title": "Teste Pauta",
+            "description": "Teste de descrição de pauta.",
+            "votesCountYes": 0,
+            "votesCountNo": 0,
+            "totalVotes": 0,
+            "creationTime": "2026-07-05T17:16:00.344Z"
+        },
+        "startTime": "2026-07-06T16:51:13.803Z",
+        "endTime": "2026-07-06T16:56:13.803Z"
+    },
+    "associate": {
+        "id": 1,
+        "name": "Teste Fornari",
+        "cpf": "12345678901",
+        "creationTime": "2026-07-05T18:09:29.895Z"
+    },
+    "choice": "YES",
+    "votingTime": "2026-07-06T16:51:16.690Z"
+}
+```
+
+**Consultar uma Pauta**
+```
+GET http://localhost:8080/api/v1/agendas/{idPauta}
+
+Resposta:
+{
+    "id": 1,
+    "title": "Teste Pauta",
+    "description": "Teste de descrição de pauta.",
+    "votesCountYes": 2,
+    "votesCountNo": 0,
+    "totalVotes": 2,
+    "creationTime": "2026-07-05T16:38:17.254Z"
+}
+```
